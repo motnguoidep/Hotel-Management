@@ -1,0 +1,8 @@
+<suite name="WebTable">
+    <test name="Chrome Browser">
+        <classes>
+            <class name="theInternet.WebTableTest"/>
+            <class name="org.example.FindFlightTest"/>
+        </classes>
+    </test>
+</suite>
