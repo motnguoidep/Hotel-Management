@@ -24,7 +24,7 @@ jobs:
       run: mvn -B package --file pom.xml
 
     - name: Run Selenium Test
-      run: mvn -f AK46/pom.xml clean test
+      run: mvn -f HotelManagement/pom.xml clean test
 
     - name: Test Report
       uses: dorny/test-reporter@v1
