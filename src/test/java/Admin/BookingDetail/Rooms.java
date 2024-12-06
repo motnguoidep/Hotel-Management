@@ -1,11 +1,10 @@
 package Admin.BookingDetail;
 
-import org.openqa.selenium.By;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
+import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
@@ -76,6 +75,8 @@ public class Rooms {
         WebElement bookingTitle = wait.until(ExpectedConditions.elementToBeClickable(By.xpath("//span[@class='title' and contains(text(),'Booking')]")));
         bookingTitle.click();
 
+        new Select(driver.findElement(By.name("example4_length"))).selectByValue("100");
+
         WebElement onlinePendingBooking = wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//td/span[contains(text(), 'ONLINE_PENDING')]")));
         assertTrue(onlinePendingBooking.isDisplayed());
 
@@ -129,5 +130,102 @@ public class Rooms {
 
         assertTrue(driver.getCurrentUrl().contains("/admin/booking/booking-details"));
     }
+
+    @Test
+    void makeConfirm(){
+        checkPendingStatus();
+
+        driver.findElement(By.xpath("//div/a[@class='btn btn-secondary ' and text()=' Make Confirm']")).click();
+
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+        WebElement bookingStatus = wait.until(ExpectedConditions.visibilityOfElementLocated(
+                By.xpath("//tr/th/b[contains(text(), 'Booking Status')]/ancestor::tr/td/span")));
+        String updatedStatus = bookingStatus.getText();
+
+        assertEquals("STAYING", updatedStatus);
+    }
+
+    @Test
+    void cancelBookingAfterConfirm() throws InterruptedException {
+        checkPendingStatus();
+
+        driver.findElement(By.xpath("//div/a[@class='btn btn-secondary ' and text()=' Make Confirm']")).click();
+
+        driver.findElement(By.xpath("(//button)[1]")).click();
+        driver.findElement(By.xpath("//a[@class='dropdown-item' and text()='CANCEL']")).click();
+
+        Alert alert = new WebDriverWait(driver, Duration.ofSeconds(10))
+                .until(ExpectedConditions.alertIsPresent());
+        Thread.sleep(3000);
+        alert.dismiss();
+    }
+
+    @Test
+    void acceptBookingAfterConfirm() throws InterruptedException {
+        checkPendingStatus();
+
+        driver.findElement(By.xpath("//div/a[@class='btn btn-secondary ' and text()=' Make Confirm']")).click();
+
+        driver.findElement(By.xpath("(//button)[1]")).click();
+        driver.findElement(By.xpath("//a[@class='dropdown-item' and text()='CANCEL']")).click();
+
+        Alert alert = new WebDriverWait(driver, Duration.ofSeconds(10))
+                .until(ExpectedConditions.alertIsPresent());
+        alert.accept();
+
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+        WebElement bookingStatus = wait.until(ExpectedConditions.visibilityOfElementLocated(
+                By.xpath("//tr/th/b[contains(text(), 'Booking Status')]/ancestor::tr/td/span")));
+        String updatedStatus = bookingStatus.getText();
+        assertEquals("CANCEL", updatedStatus);
+    }
+
+    @Test
+    void addService() throws InterruptedException {
+        checkStayingStatus();
+        driver.findElement(By.xpath("//a[@data-target='#add_service']")).click();
+        driver.findElement(By.xpath("//select[@name='service']")).click();
+        new Select(driver.findElement(By.name("service"))).selectByIndex(1);
+
+        Thread.sleep(2000);
+        driver.findElement(By.name("qty")).sendKeys("10");
+        Thread.sleep(1000);
+        driver.findElement(By.xpath("//button[@type='submit']")).click();
+    }
+    @Test
+    void resetService() throws InterruptedException {
+        checkStayingStatus();
+        driver.findElement(By.xpath("//a[@data-target='#add_service']")).click();
+        driver.findElement(By.xpath("//select[@name='service']")).click();
+        new Select(driver.findElement(By.name("service"))).selectByIndex(1);
+
+        Thread.sleep(2000);
+        driver.findElement(By.name("qty")).sendKeys("10");
+
+        Thread.sleep(1000);
+        driver.findElement(By.xpath("//button[@type='reset']")).click();
+        Thread.sleep(1000);
+
+        // Step 8: Assert that the "service" field is reset to "Select Service"
+        String selectedService = new Select(driver.findElement(By.name("service"))).getFirstSelectedOption().getText();
+        assertEquals("Select Service", selectedService, "Select Service");
+
+        // Step 9: Assert that the "qty" field is reset to 0
+        String quantityValue = driver.findElement(By.name("qty")).getAttribute("value");
+        assertEquals("0", quantityValue, "");
+    }
+
+    @Test
+    void checkOut(){
+        checkStayingStatus();
+        driver.findElement(By.xpath("//div/a[@data-target='#checkout']")).click();
+        driver.findElement(By.xpath("//label[@class='custom-control-label']")).click();
+        driver.findElement(By.xpath("//button[@id='btn-send']")).click();
+
+        driver.findElement(By.xpath("//button[@onclick=\"$('#payment-details').hide();$('#card').hide();$('#cash').hide();$('#initial-content').show();$('#payment-form').trigger('reset');\"]")).click();
+        driver.findElement(By.xpath("//button[@id='btn-send']")).click();
+        driver.findElement(By.xpath("(//button[@type='submit' and @class='btn btn-tsk'])[3]")).click();
+    }
+
 }
 
